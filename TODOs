@@ -1,0 +1,2 @@
+1. making http api calls with timeout to different server in parallel in each connection processing thread.
+2. Change mainServer to http server (simple).
