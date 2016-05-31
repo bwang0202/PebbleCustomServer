@@ -25,11 +25,8 @@ public class ConnectionThread extends Thread {
         )
         {
             String inputLine;
-            System.out.println("waiting");
             inputLine = in.readLine();
-            System.out.print(inputLine);
-            System.out.print("alkfdsjaldkfsj");
-            //echo and close
+            //get lat and long
             out.write(inputLine + "\n\n");
             out.close();
         } catch (IOException e) {
