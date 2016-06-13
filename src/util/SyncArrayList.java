@@ -7,10 +7,12 @@ public class SyncArrayList<E> {
 	private ArrayList<E> al = new ArrayList<E>();
 	private boolean locked = false;
 	
-	public synchronized void add (E e) {
+	public synchronized boolean add (E e) {
 		if (!locked) {
 			al.add(e);
+			return true;
 		}
+		return false;
 	}
 	public synchronized void remove(E e) {
 		if (!locked) {

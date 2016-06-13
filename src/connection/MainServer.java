@@ -35,12 +35,15 @@ public class MainServer {
         try (ServerSocket serverSocket =
                 new ServerSocket(portNumber);){
         		while (true) {
-                    Socket clientSocket = serverSocket.accept();
+                    //Socket clientSocket = serverSocket.accept();
                     Thread tt=new ConnectionThread(clientSocket, ts);
                     System.out.println("starting new connection");
-                    // Once ts is locked, this new connection is gonna timeout
-                    ts.add(tt);
-                    tt.start();
+                    // Once ts is locked, directly return
+                    if (ts.add(tt)) {
+                    	tt.start();
+                    } else {
+                    	//write sometihng to httpExchange
+                    }
         		}
 
         } catch (IOException e) {

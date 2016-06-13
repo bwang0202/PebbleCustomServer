@@ -11,14 +11,16 @@ import com.google.gson.*;
 public class TemperatureThread extends Thread {
 	private String apiKey = "1fde8343f147f3f67f3a14d56b7d0799";
 	private double lat, longt;
+	private String[] resp;
 
-	public TemperatureThread(double lat, double longt) {
+	public TemperatureThread(double lat, double longt, String[] ref) {
 		this.lat = lat;
 		this.longt = longt;
+		this.resp = ref;
 	}
 
 	public void start() {
-		String result;
+		String result = "";
 		for (int i = 0; i < 5; i ++){
 			BufferedReader in = null;
 			try {
@@ -58,8 +60,14 @@ public class TemperatureThread extends Thread {
 			}
 		}
 		// result is result
+		this.resp[0] = result;
 	}
 
+	public void interrupt() {
+		this.resp[0] = "Temperature result timed out";
+		super.interrupt();
+	}
+	
 	private String parse(String string) {
 		JsonElement jelement = new JsonParser().parse(string);
 		String cond = jelement.getAsJsonObject().getAsJsonArray("weather").get(0).getAsJsonObject().get("Main").toString();

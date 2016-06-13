@@ -8,14 +8,16 @@ import java.net.URL;
 
 public class LocatorThread extends Thread {
 	private double lat, longt;
+	private String[] resp;
 
-	public LocatorThread(double lat, double longt) {
+	public LocatorThread(double lat, double longt, String[] ref) {
 		this.lat = lat;
 		this.longt = longt;
+		this.resp = ref;
 	}
 
 	public void start() {
-		StringBuffer response;
+		StringBuffer response = new StringBuffer();
 		for (int i = 0; i < 5; i ++){
 			BufferedReader in = null;
 			try {
@@ -74,5 +76,12 @@ public class LocatorThread extends Thread {
 			}
 		}
 		// response.toString() is result
+		this.resp[0] = response.toString();
+	}
+	
+
+	public void interrupt() {
+		this.resp[0] = "Locator result timed out";
+		super.interrupt();
 	}
 }
