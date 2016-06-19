@@ -17,7 +17,6 @@ public class SyncArrayList<E> {
 	public synchronized void remove(E e) {
 		if (!locked) {
 			al.remove(e);
-			System.out.println(al.size());
 		}
 	}
 	//one shot thing

@@ -10,18 +10,18 @@ import com.google.gson.*;
 
 public class TemperatureThread extends Thread {
 	private String apiKey = "1fde8343f147f3f67f3a14d56b7d0799";
-	private double lat, longt;
+	private String lat, longt;
 	private String[] resp;
 
-	public TemperatureThread(double lat, double longt, String[] ref) {
-		this.lat = lat;
-		this.longt = longt;
+	public TemperatureThread(String lat2, String longt2, String[] ref) {
+		this.lat = lat2;
+		this.longt = longt2;
 		this.resp = ref;
 	}
 
 	public void start() {
 		String result = "";
-		for (int i = 0; i < 5; i ++){
+		for (int i = 0; i < 2; i ++){
 			BufferedReader in = null;
 			try {
 				String url = "http://api.openweathermap.org/data/2.5/weather?lat=" +
@@ -32,10 +32,10 @@ public class TemperatureThread extends Thread {
 
 				// optional default is GET
 				con.setRequestMethod("GET");
+				con.setConnectTimeout(1000);
+				con.setReadTimeout(4000);
 
 				int responseCode = con.getResponseCode();
-				System.out.println("\nSending 'GET' request to URL : " + url);
-				System.out.println("Response Code : " + responseCode);
 
 				in = new BufferedReader(
 						new InputStreamReader(con.getInputStream()));
@@ -47,7 +47,8 @@ public class TemperatureThread extends Thread {
 				//parse sb to json
 				result = parse(sb.toString());
 				break;
-			} catch (IOException e) {
+			} catch (Exception e) {
+				result = "Weather server error";
 				e.printStackTrace();
 			} finally {
 				if (in != null) {
@@ -70,8 +71,28 @@ public class TemperatureThread extends Thread {
 	
 	private String parse(String string) {
 		JsonElement jelement = new JsonParser().parse(string);
-		String cond = jelement.getAsJsonObject().getAsJsonArray("weather").get(0).getAsJsonObject().get("Main").toString();
-		String temp = jelement.getAsJsonObject().get("Main").getAsJsonObject().get("temp").toString();
-		return cond + ", " + temp;
+		String cond = jelement.getAsJsonObject()
+				.getAsJsonArray("weather")
+				.get(0)
+				.getAsJsonObject()
+				.get("main")
+				.toString();
+		String temp = jelement.getAsJsonObject().get("main").getAsJsonObject().get("temp").toString();
+		float tf = (float) (Float.parseFloat(temp) - 273.0);
+		return cond + ", " + tf;
+	}
+	
+	public static void main(String[] args) {
+		try {
+				String[] a = new String[2];
+				Thread t = new TemperatureThread("37.76893497", "-122.42284884", a);
+				t.start();
+				t.join();
+				System.out.println(a[0]);
+				return;
+		} catch (Throwable t) {
+			t.printStackTrace();
+		}
+		System.exit(1);
 	}
 }

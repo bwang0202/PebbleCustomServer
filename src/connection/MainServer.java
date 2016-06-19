@@ -1,55 +1,30 @@
 package connection;
-import java.net.*;
-import java.util.ArrayList;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 
 import util.SyncArrayList;
 
-import java.io.*;
- 
 public class MainServer {
-    public static void main(String[] args) throws IOException {
-    	SyncArrayList<Thread> ts = new SyncArrayList<Thread>();
-    	//shutdown hook
-		Runtime.getRuntime().addShutdownHook(new Thread()
-        {
-            @Override
-            public void run()
-            {
-            	ts.setLocked();
-            	ArrayList<Thread> al = ts.getLockedArray();
-            	try {
-            		for ( Thread t : al ) {
-            			t.join();
-            		}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-            }
-        });
-    	int portNumber;
-        if (args.length != 1) {
-            portNumber = 4443;
-        } else {
-        	portNumber = Integer.parseInt(args[0]);
-        }
-        try (ServerSocket serverSocket =
-                new ServerSocket(portNumber);){
-        		while (true) {
-                    //Socket clientSocket = serverSocket.accept();
-                    Thread tt=new ConnectionThread(clientSocket, ts);
-                    System.out.println("starting new connection");
-                    // Once ts is locked, directly return
-                    if (ts.add(tt)) {
-                    	tt.start();
-                    } else {
-                    	//write sometihng to httpExchange
-                    }
-        		}
+	private static SyncArrayList<Thread> list = new SyncArrayList<>();
 
-        } catch (IOException e) {
-            System.out.println("Exception caught when trying to listen on port "
-                + portNumber + " or listening for a connection");
-            System.out.println(e.getMessage());
-        }
+    public static void main(String[] args) throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+        server.createContext("/test", new MyHandler());
+        server.setExecutor(null); // creates a default executor
+        server.start();
     }
+
+    static class MyHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+        	Thread t = new ConnectionThread(httpExchange, list);
+        	list.add(t);
+        	t.start();
+          }
+    }
+
 }

@@ -7,18 +7,18 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class LocatorThread extends Thread {
-	private double lat, longt;
+	private String lat, longt;
 	private String[] resp;
 
-	public LocatorThread(double lat, double longt, String[] ref) {
-		this.lat = lat;
-		this.longt = longt;
+	public LocatorThread(String lat2, String longt2, String[] ref) {
+		this.lat = lat2;
+		this.longt = longt2;
 		this.resp = ref;
 	}
 
 	public void start() {
 		StringBuffer response = new StringBuffer();
-		for (int i = 0; i < 5; i ++){
+		for (int i = 0; i < 2; i ++){
 			BufferedReader in = null;
 			try {
 				String url = "http://maps.googleapis.com/maps/api/geocode/json?latlng=" + 
@@ -29,10 +29,10 @@ public class LocatorThread extends Thread {
 
 				// optional default is GET
 				con.setRequestMethod("GET");
-				
+				con.setConnectTimeout(1000);
+				con.setReadTimeout(4000);
+				//TODO: read response code
 				int responseCode = con.getResponseCode();
-				System.out.println("\nSending 'GET' request to URL : " + url);
-				System.out.println("Response Code : " + responseCode);
 
 				in = new BufferedReader(
 						new InputStreamReader(con.getInputStream()));
@@ -50,7 +50,7 @@ public class LocatorThread extends Thread {
 								count++;
 								if (count == 3) {
 									while (j + 1 < chars.length && chars[j + 1] != '"') {
-										response.append(chars[j]);
+										response.append(chars[++j]);
 									}
 									break;
 								} else {
@@ -60,10 +60,12 @@ public class LocatorThread extends Thread {
 								j++;
 							}
 						}
+						if (response.length() > 0) break;
 					}
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
+				response = new StringBuffer("Google api error");
 			} finally {
 				if (in != null) {
 					try {
@@ -76,12 +78,27 @@ public class LocatorThread extends Thread {
 			}
 		}
 		// response.toString() is result
-		this.resp[0] = response.toString();
+		if (response.length() == 0) {
+			response = new StringBuffer("no address found.");
+		}
+		this.resp[1] = response.toString();
 	}
 	
-
 	public void interrupt() {
-		this.resp[0] = "Locator result timed out";
+		this.resp[1] = "Locator result timed out";
 		super.interrupt();
+	}
+	public static void main(String[] args) {
+		try {
+				String[] a = new String[2];
+				Thread t = new LocatorThread("37.76893497", "-122.42284884", a);
+				t.start();
+				t.join();
+				System.out.println(a[1]);
+				return;
+		} catch (Throwable t) {
+			t.printStackTrace();
+		}
+		System.exit(1);
 	}
 }
